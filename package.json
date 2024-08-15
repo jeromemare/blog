@@ -13,6 +13,7 @@
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
+    "docs:build:github": "cross-env PUBLIC_BASE=blog vitepress build docs",
     "docs:preview": "vitepress preview docs"
   },
   "keywords": [
@@ -27,6 +28,9 @@
   },
   "homepage": "https://github.com/jeromemare/blog#readme",
   "devDependencies": {
+    "@types/node": "^22.3.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
     "vitepress": "^1.3.2"
   }
 }

@@ -1,9 +1,13 @@
+import 'dotenv/config'
 import { defineConfig } from 'vitepress'
+
+const base: string = (process.env.PUBLIC_BASE as string)
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "Blog",
   description: "My blog",
+  base,
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
