@@ -1,7 +1,8 @@
 import 'dotenv/config'
 import { defineConfig } from 'vitepress'
 
-const base: string = (process.env.PUBLIC_BASE as string)
+const publicBase: string = (process.env.PUBLIC_BASE as string)
+const base = publicBase ? `/${publicBase}/` : '/'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
