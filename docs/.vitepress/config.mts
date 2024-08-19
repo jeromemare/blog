@@ -6,28 +6,54 @@ const base = publicBase ? `/${publicBase}/` : '/'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "Blog",
-  description: "My blog",
+  title: "Jerome Mare",
+  description: "Mon blog",
   base,
+  head: [
+    [ 'link', { rel: 'icon', href: '/images/favicon.png' } ],
+  ],
+
+  locales: {
+    root: {
+      label: 'Français',
+      lang: 'fr'
+    },
+    es: {
+      label: 'Español',
+      lang: 'es',
+      link: '/es',
+    },
+    fr: {
+      label: 'English',
+      lang: 'en',
+      link: '/en',
+    },
+  },
+
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: 'Home', link: '/' },
-      { text: 'Examples', link: '/markdown-examples' }
+      { text: 'Articles', link: '/articles' },
+      { text: 'A propos de moi', link: '/bio' },
     ],
 
     sidebar: [
       {
-        text: 'Examples',
+        text: 'A propos de moi',
         items: [
-          { text: 'Markdown Examples', link: '/markdown-examples' },
-          { text: 'Runtime API Examples', link: '/api-examples' }
+          { text: 'Bio', link: '/bio' },
+          { text: 'Resume', link: '/resume' }
         ]
       }
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
-    ]
+      { icon: 'linkedin', link: 'https://fr.linkedin.com/in/j%C3%A9r%C3%B4me-mare-844a87320/' },
+      { icon: 'github', link: 'https://github.com/jeromemare' },
+    ],
+
+    search: {
+      provider: 'local'
+    },
   }
 })
