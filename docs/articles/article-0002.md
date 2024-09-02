@@ -1,171 +1,319 @@
 ---
-title: Créer une App d'aide à la prononciation
-
+title: Créer une App d'aide à la prononciation (Partie 2)
 ---
 
-# Créer une App d'aide à la prononciation
+# Créer une App d'aide à la prononciation (Partie 2)
 
 L'objet de ce post est de réaliser une application permettant de contrôler la prononciation de l'utilisateur.
 
 Pour suivre ce tutoriel, il faut avoir des connaissances en javascript et plus particulièrement en Vue.js 3.
 
-## Idée
+## Ce que nous allons faire
 
-J'ai décidé il y a peu de me remettre à l'allemand. La principale difficulté que je rencontre dans cette langue de la prononcer correctement. Habituellement j'écoute un exemple, je m'enregistre en train de le répéter et je me réécoute. C'est un process compliqué et je dois vous l'avouer je n'ai pas une très bonne oreille.
+Nous avions dans [l'article précédent](/articles/article-0001) mis en place le squelette de l'application avec le framework [Quasar](https://quasar.dev/) basé sur [VueJS](https://vuejs.org/)
 
-A partir de ce constat, je me suis demandé si il n'existerait pas une App ou une api qui pourrait me dire si je prononce correctement un mot voir une phrase en allemand ! Après quelques investigations et belles découvertes j'ai eu l'envie de coder ma propre App pour résoudre mon problème.
+Nous allons maintenant mettre en place le premier des deux composants principaux de l'application :
+- Le composant responsable de la saisie du mot ou de la phrase à prononcer. Ce dernier pourra lire le mot pour permettre à l'utilisateur d'écouter ce qu'il doit prononcer
+- Le composant d'acquisition vocale. Il s'agit d'un bouton permettant d'enregistrer sa voix puis d'envoyer l'enregistrement à l'api.
 
-Voici comment je m'y suis pris !
+Nous allons commencer par créer le squelette du composant et à le positionner dans la page principale de l'application.
 
-## Les APIs disponibles
+Pour cela, créer le fichier `WordInputField.vue` dans le répertoire `/src/components`. Vous pouvez en profiter pour supprimer le fichier `EssentialLink.vue` qui n'est plus utile.
 
-Après quelques recherches j'ai pu trouver des Apps qui résolvaient mon problème. Mais dans l'ensemble, la validation de la prononciation n'était souvent qu'une fonction annexe d'une application payante (voir fonctionnant avec abonnement). Je me suis alors mis en tête de rechercher des APIs.
+## Création d'un composant vue
 
-Voici la liste des APIs que j'ai pu identifier :
+```vue
+<template>
+  <q-input
+    class="input-text q-mt-lg"
+    v-model="sentence"
+    type="textarea"
+    :lines="2"
+    autogrow
+    hint="Input a word or a sentence"
+    clearable
+  />
+</template>
 
-- [Google Cloud Speech-to-Text API](https://cloud.google.com/speech-to-text/docs)
-- [Microsoft Azure Speech Service](https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/)
-- [iSpeech Pronunciation](https://www.ispeech.org/api/#pronunciation)
-- [Speechmatics](https://docs.speechmatics.com)
-- [Speechace](https://www.speechace.com/docs)
-- [Elsa Now](https://api-external-doc.elsanow.co/intro)
-- [SpeechSuper](https://docs.speechsuper.com/#/)
+<script setup>
+import { ref } from 'vue'
 
-L'ensemble de ces apis sont payantes mais permettent en règle générale d'obtenir un accès de 2 semaines pour tester et expérimenter.
+// Reference on the word or sentence to be pronounced
+const sentence = ref('')
+</script>
 
-Vu que je voulais contrôler ma prononciation de l'allemand j'ai choisi de tester avec l'api SpeechSuper car elle supporte plusieurs langues dont l'allemand. Plus tard dans le tutorial nous essaierons l'api Speechace pour démontrer la facilité à passer d'une api à une autre suivant les besoins.
-
-## Définition de l'ergonomie de l'application
-
-L'objectif est d'implémenter une App simple permettant de saisir un mot, d'enregistrer notre voix, d'envoyer l'enregistrement audio à l'api et d'afficher notre score.
-
-Voici à quoi va ressembler l'application
-
-| Saisir un texte à prononcer | Enregistrer notre prononciation | Afficher le résultat de l'enregistrement | Visualiser les différentes tentatives |
-| :---: | :---: | :---: | :---: |
-|![Ergonomics 1](/article-0001/ergonomics-01.png){width=110} | ![Ergonomics 2](/article-0001/ergonomics-02.png){width=110}|![Ergonomics 3](/article-0001/ergonomics-03.png){width=110} | ![Ergonomics 4](/article-0001/ergonomics-04.png){width=110}|
-
-Nous allons donc créer une application qui présentera un champ de texte permettant la saisie d'un mot ou d'une phrase. Un boutton permettra de l'écouter.
-Nous avons ensuite un boutton pour enregistrer notre voix, celui-ci changera de style quand il sera en mode enregistrement. Il suffira de cliquer dessus pour arrêter et envoyer à l'api pour obtenoir un score de prononciation.
-Une fois le score obtenu, il est affiché sous forme de tuile avec une couleur représentant notre score, du rouge au vert en passant par le orange.
-
-## Initialisation de l'application
-
-L'idéal serait de pouvoir déployer l'App comme webapp, mais aussi comme une application native Android. Pour cette raison nous allons utiliser [Quasar](https://quasar.dev/).
-
-### Le framework Quasar
-
-Quasar est un framework Vue.js open-source pour développer des applications avec une codebase unique. Elles peuvent être déployées sur le web (SPA, PWA, SSR), en tant qu'application mobile (Android, iOS) ou encore en tant qu'application Desktop (MacOs, Windows, Linux)
-
-### Préparation
-
-Si ce n'est pas encore le cas, il vous faut installer [NodeJS](https://nodejs.org/en/download/package-manager/current). Je vous conseille d'utiliser [volta](https://volta.sh/) ce dernier vous permettra d'utiliser différentes versions de NodeJs suivant vos projets.
-
-Nous allons commencer par initialiser notre projet avec l'outil de scaffolding de Quasar
-
-```sh
-npm i -g @quasar/cli
-npm init quasar
+<style scoped>
+.input-text {
+  width: 80vw;
+  max-width: 400px;
+}
+</style>
 ```
 
-Le cli va nous poser plusieurs questions, choisir les options suivantes
-- App with Quasar CLI
-- Project folder : learn2speak
-- Quasar v2
-- Javascript
-- Quasar App with Vite
-- Package name : learn2speak
-- Project product name : Learn to speak
-- Project description : Assess your pronounciation
-- Author : vous même
-- CSS preprocessor : Sass with SCSS syntax
-- Features needed :
-	- ESLint
-	- Axios
-- ESLint preset : Standard
-- Install project dependencies : Yes, use npm
+Une fois cela fait nous pouvons utiliser le composant dans la page principale : `/src/pages/IndexPage.vue`
 
-Une fois l'exécution de la commande, vous pouvez entrer dans le répertoire et servir l'application en local :
+```vue
+<template>
+  <q-page class="column wrap content-center items-center">
+    <sentence-input-field />
+    <div>
+      <q-btn
+        class="q-mt-lg"
+        icon="mic"
+        color="primary"
+        round
+        size="30px"
+        @click="record"
+      />
+    </div>
+  </q-page>
+</template>
 
-```
-cd learn2speak
-npm run dev
-```
+<script setup>
+import SentenceInputField from '../components/SentenceInputField'
 
-Votre navigateur par défaut devrait ouvrir la page à l'adresse suivante [http://localhost:9000](http://localhost:9000)
-
-![Squelette applicatif Quasar](/article-0001/application-quasar-gen.png)
-
-L'application d'exemple est disponible, nous allons enlever les éléments dont nous n'avons pas besoin. Pour cela nous allons ouvrir le code source dans VSCode (vous pouvez bien entendu utiliser un autre éditeur)
-
-```
-code .
+function record () {
+  console.log('Record')
+}
+</script>
 ```
 
-### Modification du squelette proposé pour obtenir l'ergonomie ciblée
+Comme vous pouvez le voir, cela nous permet de supprimer la section `style` et le code du script déclarant la référence `sentence`
 
+Nous allons maintenant pouvoir nous concentrer sur le design de ce composant
 
+## Design du composant
 
+Nous allons implémenter le composant suivant.
 
-### Ergonomie
+![Design du composant de saisie](/article-0002/design-input-field-fr.png)
 
-Cible en terme d'ergonomie
+Avec son composant [`q-input`](https://quasar.dev/vue-components/input) Quasar a déjà fait quasiment tout le travail pour nous !
 
-Préparation des cases vides
+Voici comment nous allons modifier notre template html
 
-## Enregistreur vocal
+```vue
+<template>
+  <q-input
+    class="input-text q-mt-lg"
+    v-model="sentence"
+    type="textarea"
+    :lines="2"
+    autogrow
+    hint="Input a word or a sentence"
+    clearable
+  >
+    <template v-slot:after>
+      <q-btn
+        round
+        dense
+        flat
+        icon="record_voice_over"
+      >
+        <q-tooltip>Listen the word or the sentence</q-tooltip>
+      </q-btn>
+    </template>
+  </q-input>
+</template>
+```
 
-TODO
+## Synthèse vocale
 
-## Envoi à l'api
+Il nous reste maintenant faire prononcer ce qui a été saisi, c'est à dire le contenu de la référence sentence à notre device.
 
-TODO
+Nous allons l'api [SpeechSyntesis](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis). Pour simplifier l'usage de l'api nous allons utiliser un wrapper autour de celle-ci : [`Artyom.js`](https://sdkcarlos.github.io/sites/artyom.html) qui est disponible en tant que module npm.
 
-## Affichage du résultat
+Dans une console, installez le module :
 
-TODO
+```bash
+npm i --save artyom.js
+```
 
-## Déploiement sur Github Pages
+Puis ajouter le code d'initialisation dans la partie javascript du composant
 
-TODO
+```vue
+<script setup>
+import { ref } from 'vue'
+import Artyom from 'artyom.js'
 
-## Packaging Android
+// Reference on the word or sentence to be pronounced
+const sentence = ref('')
 
-TODO
-
-## Et après ?
-
-- Rejouer l'enregistrement
-- Traduire le mot via google translate api
-- Un mot au hasard
-- Gérer plusieurs langues
-- ?
-
-
-
-
-
-  ::: code-group
-```js [config.js]
-import { defineConfig } from 'vitepress'
-
-// https://vitepress.dev/reference/site-config
-export default defineConfig({
-    title: "My Awesome Blog",
-    description: "Talking about the future !",
-    themeConfig: {
-        // https://vitepress.dev/reference/default-theme-config
-        nav: [
-            { text: 'Home', link: '/' },
-        ],
-        search: {
-            provider: 'local'
-        }
-    }
+const artyom = new Artyom()
+artyom.initialize({
+  debug: false,
+  continuous: false,
+  listen: false,
+  lang: 'de-DE'
 })
+
+async function speak () {
+  artyom.say(sentence.value)
+}
+</script>
 ```
-:::
 
-## Another Sub Section
+Notez que nous utilisons la langue allemande en initialisant Artyom avec : `lang: 'de-DE'`
+Nous pourrions utiliser une autre langue comme :
+- Le français : 'fr-FR'
+- L'espagnol : 'es-ES'
 
-Ea consequuntur veniam ut veniam laborum sit recusandae deserunt. Quo ipsa odit ut temporibus ipsam cum consequatur itaque et possimus tempore et quia cumque!
+Il ne reste plus qu'à ajouter notre fonction `speak` au bouton :
+
+```vue{7}
+<template v-slot:after>
+  <q-btn
+    round
+    dense
+    flat
+    icon="record_voice_over"
+    @click="speak"
+  >
+    <q-tooltip>Listen the word or the sentence</q-tooltip>
+  </q-btn>
+</template>
+```
+
+## Petites améliorations du composant
+
+Nous allons apporter quelques améliorations à notre composant.
+
+Tout d'abord, si l'api n'est pas disponible il ne faut pas faire apparaitre le bouton.
+Pour cela nous allons tout simplement créer une référence qui va tester la disponibilité de l'api `isSpeachSyntesisAvailable` et conditionner la création du bouton à celle-ci :
+
+```vue{8,16-18}
+<script setup>
+import { ref } from 'vue'
+import Artyom from 'artyom.js'
+
+// Reference on the word or sentence to be pronounced
+const sentence = ref('')
+
+const isSpeechSyntesisAvailable = ref(false)
+
+const artyom = new Artyom()
+artyom.initialize({
+  debug: false,
+  continuous: false,
+  listen: false,
+  lang: 'de-DE'
+}).then(() => {
+  isSpeechSyntesisAvailable.value = artyom.speechSupported()
+})
+
+async function speak () {
+  artyom.say(sentence.value)
+}
+```
+
+Dans l'implémentation nous attendons la fin de l'initialisation pour savoir si la synthèse vocale est disponible, il faut donc ne rendre disponible le bouton qu'une fois l'initialisation effectuée. Pour cela nous allons ajouter une référence `isArtyomReady` et une computed pour savoir si le bouton est `disable` `cannotSpeak` (on préfère utiliser `cannotSpeak` que `canSpeak` car nous allons l'associer à l'état `disable`, il vaut donc mieux qu'elle soit à `true` quand le bouton sera `disabled`)
+
+```vue{2,7-11,21}
+<script setup>
+import { ref, computed } from 'vue'
+import Artyom from 'artyom.js'
+
+// Reference on the word or sentence to be pronounced
+const sentence = ref('')
+const isArtyomReady = ref(false)
+const isSpeechSyntesisAvailable = ref(false)
+const cannotSpeak = computed(() => {
+  return !sentence.value || !isArtyomReady.value || !isSpeechSyntesisAvailable.value
+})
+
+const artyom = new Artyom()
+artyom.initialize({
+  debug: false,
+  continuous: false,
+  listen: false,
+  lang: 'de-DE'
+}).then(() => {
+  isSpeechSyntesisAvailable.value = artyom.speechSupported()
+  isArtyomReady.value = true
+})
+
+async function speak () {
+  artyom.say(sentence.value)
+}
+```
+
+Il faut prendre en compte ce point dans notre template
+
+```vue{17}
+<template>
+  <q-input
+    class="input-text q-mt-lg"
+    v-model="sentence"
+    type="textarea"
+    :lines="2"
+    autogrow
+    hint="Input a word or a sentence"
+    clearable
+  >
+    <template v-slot:after>
+      <q-btn
+        round
+        dense
+        flat
+        icon="record_voice_over"
+        :disable="cannotSpeak"
+        @click="speak"
+      >
+        <q-tooltip>Listen the word or the sentence</q-tooltip>
+      </q-btn>
+    </template>
+  </q-input>
+</template>
+```
+
+Il ne reste plus qu'à interdire à l'utilisateur de cliquer deux fois sur le bouton. Pour cela nous allons utiliser une nouvelle ref `isSpeaking` pour savoir si la synthèse vocale est en cours ou non, et ajouter son état au calcul de la computed `cannotSpeak`
+
+```vue{9,11,26-31}
+<script setup>
+import { ref, computed } from 'vue'
+import Artyom from 'artyom.js'
+
+// Reference on the word or sentence to be pronounced
+const sentence = ref('')
+const isArtyomReady = ref(false)
+const isSpeechSyntesisAvailable = ref(false)
+const isSpeaking = ref(false)
+const cannotSpeak = computed(() => {
+  return isSpeaking.value || !sentence.value || !isArtyomReady.value || !isSpeechSyntesisAvailable.value
+})
+
+const artyom = new Artyom()
+artyom.initialize({
+  debug: false,
+  continuous: false,
+  listen: false,
+  lang: 'de-DE'
+}).then(() => {
+  isSpeechSyntesisAvailable.value = artyom.speechSupported()
+  isArtyomReady.value = true
+})
+
+async function speak () {
+  isSpeaking.value = true
+  artyom.say(sentence.value, {
+    onEnd: function () {
+      isSpeaking.value = false
+    }
+  })
+}
+```
+
+Nous avons maintenant une application qui permet de saisir une phrase et de l'écouter dans la langue choisie. Pour cela nous avons isoler un composant vue indépendant.
+
+![L'application après la partie 1](/article-0002/app-after-part2.png){width=300}
+
+## Que reste-t-il à faire ?
+
+Dans une prochaine partie nous verrons comment acquérir l'audio,et obtenir un score via l'api [SpeechSuper](https://docs.speechsuper.com/#/)
+
+- Partie 3 : Acquisition de l'audio et du score via l'API SpeechSuper
+- Partie 4 : Packaging de l'application
+
+## Conclusion
+
+N'hésitez pas à commenter l'article ! La partie 3 arrive bientôt !

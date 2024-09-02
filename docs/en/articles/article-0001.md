@@ -277,10 +277,10 @@ The application will look like:
 We have therefore managed to obtain the skeleton of our application.
 
 In a future part we will see how to acquire the audio, then how to obtain a score via the [SpeechSuper](https://docs.speechsuper.com/#/) API
-- Part 2: Acquiring the audio
-- Part 3: Obtaining the score via the SpeechSuper API
+- Part 2: Enter the sentence and listen an example
+- Part 3: Acquiring the audio and get the score via the SpeechSuper API
 - Part 4: Packaging the application
 
 ## Conclusion
 
-Don't hesite on comments the post ! Part 2 will follow soon !
+Don't hesitate on comments the post ! Part 2 will follow soon !
