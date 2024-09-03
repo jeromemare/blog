@@ -61,7 +61,6 @@ npm init quasar
 
 The `cli` will ask us several questions, choose the following options :
 
-{% collapsible Options List %}
 - App with Quasar CLI
 - Project folder : learn2speak
 - Quasar v2
@@ -77,7 +76,6 @@ The `cli` will ask us several questions, choose the following options :
   - Axios
 - ESLint preset : Standard
 - Install project dependencies : Yes, use npm
-{% endcollapsible %}
 
 Once the command is executed, you can enter the directory and serve the application locally:
 

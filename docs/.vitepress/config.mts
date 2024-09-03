@@ -9,6 +9,7 @@ export default defineConfig({
   title: "Jerome Mare",
   description: "Mon blog",
   base,
+  ignoreDeadLinks: true,
   head: [
     [ 'link', { rel: 'icon', href: '/images/favicon.png' } ],
   ],
